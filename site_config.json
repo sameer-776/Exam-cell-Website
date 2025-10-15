@@ -1,0 +1,32 @@
+{
+    "quick_links": [
+        {
+            "id": "link_1",
+            "title": "Academic Calendar",
+            "description": "View all key dates for the semester.",
+            "icon_class": "fas fa-calendar-alt",
+            "url": "#"
+        },
+        {
+            "id": "link_2",
+            "title": "View Results",
+            "description": "Access the official results portal.",
+            "icon_class": "fas fa-poll",
+            "url": "#"
+        },
+        {
+            "id": "link_3",
+            "title": "Syllabus & Scheme",
+            "description": "Find curriculum for all branches.",
+            "icon_class": "fas fa-book",
+            "url": "#"
+        },
+        {
+            "id": "link_4",
+            "title": "Contact Exam Cell",
+            "description": "Get in touch with the administration.",
+            "icon_class": "fas fa-envelope-open-text",
+            "url": "#"
+        }
+    ]
+}

@@ -1,0 +1,35 @@
+[
+    {
+        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+        "title": "Semester Examination Schedule",
+        "body": "The schedule for the upcoming semester examinations has been released. Please check the attachment for detailed timings and dates.",
+        "type": "common",
+        "department": "",
+        "year": "",
+        "attachment_url": "https://www.poornima.edu.in/schedules/exam-schedule.pdf",
+        "is_popup": true,
+        "start_datetime": "2025-10-15T10:00:00"
+    },
+    {
+        "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+        "title": "Lab Practical for 3rd Year CSE",
+        "body": "The practical examination for the Data Structures lab is scheduled for next week. Batches will be notified by the department.",
+        "type": "departmental",
+        "department": "cs",
+        "year": "3",
+        "attachment_url": "",
+        "is_popup": false,
+        "start_datetime": "2025-10-14T12:30:00"
+    },
+    {
+        "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+        "title": "Guideline for Re-evaluation",
+        "body": "Students seeking re-evaluation of their answer sheets must apply through the university portal within 7 days of result declaration.",
+        "type": "guideline",
+        "department": "",
+        "year": "",
+        "attachment_url": "",
+        "is_popup": false,
+        "start_datetime": "2025-10-10T09:00:00"
+    }
+]
