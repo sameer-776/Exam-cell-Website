@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -22,10 +22,8 @@
             <div class="container">
                 <h2 id="hero-text">One site for all your<div class="word-wheel-wrapper"><div class="word-wheel"></div></div></h2>
                 <p>The central hub for all official examination info at Poornima University.</p>
-                <div class="hero-cta">
-    <a href="#notifications" class="btn">Find My Department's Updates</a>
-    <a href="{{ calendar_url }}" class="btn" target="_blank" rel="noopener noreferrer">View Academic Calendar</a>
-</div>
+                <div class="hero-cta"><a href="#notifications" class="btn">Find My Department's Updates</a><a href="{{ calendar_url }}" class="btn" target="_blank" rel="noopener noreferrer">View Academic Calendar</a></div>
+            </div>
         </section>
         <section id="quick-access" class="quick-access-section">
             <div class="container">
@@ -46,8 +44,26 @@
                         <div class="department-selector">
                             <h3><i class="fas fa-building"></i> Departmental Notifications</h3>
                             <p>Select your department and year to filter updates.</p>
-                            <select id="department-select"><option value="">-- Select Your Department --</option><option value="cs">CS & Engineering</option><option value="mech">Mechanical</option><option value="elec">Electrical</option><option value="civil">Civil</option></select>
-                            <select id="year-select"><option value="">-- Select Year --</option><option value="1">First Year</option><option value="2">Second Year</option><option value="3">Third Year</option><option value="4">Fourth Year</option></select>
+                            <select id="department-select">
+                                <option value="">-- Select Your Department --</option>
+                                <option value="cse">Faculty of Computer Science & Engineering</option>
+                                <option value="eng">Faculty of Engineering & Technology</option>
+                                <option value="arch">Faculty of Planning & Architecture</option>
+                                <option value="design">Faculty of Design & Arts</option>
+                                <option value="mgmt">Faculty of Management & Commerce</option>
+                                <option value="hm">Poornima Institute of Hotel Management</option>
+                                <option value="sci">Faculty of Science & Humanities</option>
+                                <option value="health">Faculty of Public Health</option>
+                                <option value="ire">Faculty of Innovation, Research & Entrepreneurship</option>
+                            </select>
+                            <select id="year-select">
+                                <option value="">-- Select Year --</option>
+                                <option value="1">First Year</option>
+                                <option value="2">Second Year</option>
+                                <option value="3">Third Year</option>
+                                <option value="4">Fourth Year</option>
+                                <option value="5">Fifth Year</option>
+                            </select>
                         </div>
                         <div id="department-notifications-container" class="notification-list"></div>
                     </div>

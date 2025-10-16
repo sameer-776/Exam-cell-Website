@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 
 # --- App Configuration & Paths ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'a_very_secret_key_for_development_v8')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'a_very_secret_key_for_development_v10')
 NOTIFICATIONS_FILE = 'notifications.json'
 USERS_FILE = 'users.json'
 CONFIG_FILE = 'site_config.json'
@@ -34,6 +34,36 @@ def read_json(file_path):
 def write_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f: json.dump(data, f, indent=4)
 
+# --- vvv NEW: UNUSED FILE CLEANUP FUNCTION vvv ---
+def cleanup_unused_files():
+    """Scans for and deletes files in the uploads folder that are no longer referenced."""
+    all_notifications = read_json(NOTIFICATIONS_FILE)
+    site_config = read_json(CONFIG_FILE)
+    used_filenames = set()
+
+    # Get filenames from notifications
+    for notif in all_notifications:
+        url = notif.get('attachment_url', '')
+        if url and '/static/uploads/' in url:
+            used_filenames.add(url.split('/')[-1])
+
+    # Get filenames from quick links
+    for link in site_config.get('quick_links', []):
+        url = link.get('url', '')
+        if url and '/static/uploads/' in url:
+            used_filenames.add(url.split('/')[-1])
+    
+    # Compare with files on disk and delete orphans
+    if not os.path.exists(UPLOAD_FOLDER): return
+    for filename in os.listdir(UPLOAD_FOLDER):
+        if filename not in used_filenames:
+            try:
+                os.remove(os.path.join(UPLOAD_FOLDER, filename))
+                print(f"Cleaned up unused file: {filename}") # For server log
+            except OSError as e:
+                print(f"Error deleting file {filename}: {e}")
+# --- ^^^ END OF NEW FUNCTION ^^^ ---
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -46,14 +76,11 @@ def login_required(f):
 def index():
     site_config = read_json(CONFIG_FILE)
     quick_links = site_config.get('quick_links', [])
-    
-    # Find the specific URL for the academic calendar
-    calendar_url = '#' # Default fallback URL
+    calendar_url = '#'
     for link in quick_links:
         if 'calendar' in link.get('title', '').lower():
             calendar_url = link.get('url', '#')
             break
-            
     return render_template('index.html', quick_links=quick_links, calendar_url=calendar_url)
 
 @app.route('/api/notifications')
@@ -113,12 +140,20 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     notifications = read_json(NOTIFICATIONS_FILE)
+    now = datetime.utcnow()
+    updated = False
+    for notif in notifications:
+        if notif.get('type') != 'archive' and notif.get('end_datetime'):
+            try:
+                if datetime.fromisoformat(notif['end_datetime']) < now:
+                    notif['type'] = 'archive'; updated = True
+            except (ValueError, TypeError): continue
+    if updated: write_json(NOTIFICATIONS_FILE, notifications)
     site_config = read_json(CONFIG_FILE)
     active_notifications = [n for n in notifications if n.get('type') != 'archive']
     archived_notifications = [n for n in notifications if n.get('type') == 'archive']
     return render_template('admin.html', active_notifications=active_notifications, archived_notifications=archived_notifications, quick_links=site_config.get('quick_links', []))
 
-# ... (add, edit, delete notification routes are unchanged) ...
 @app.route('/admin/add', methods=['POST'])
 @login_required
 def add_notification():
@@ -167,6 +202,7 @@ def edit_notification(notification_id):
             })
             break
     write_json(NOTIFICATIONS_FILE, notifications)
+    cleanup_unused_files() # <-- Call cleanup after edit
     flash('Notification updated successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -175,34 +211,27 @@ def edit_notification(notification_id):
 def delete_notification(notification_id):
     notifications = [n for n in read_json(NOTIFICATIONS_FILE) if n['id'] != notification_id]
     write_json(NOTIFICATIONS_FILE, notifications)
+    cleanup_unused_files() # <-- Call cleanup after delete
     flash('Notification deleted successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# --- vvv THIS FUNCTION IS NOW UPDATED FOR FILE UPLOADS vvv ---
 @app.route('/admin/links/update', methods=['POST'])
 @login_required
 def update_config_links():
     site_config = read_json(CONFIG_FILE)
     for i, link in enumerate(site_config.get('quick_links', [])):
-        # Update title from form
         link['title'] = request.form.get(f"title_{i}", link['title'])
-        
-        # Check for a new file upload for this specific link
         file_key = f'file_{i}'
         if file_key in request.files:
             file = request.files[file_key]
             if file and file.filename != '' and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                # If a file was uploaded, its path becomes the new URL
                 link['url'] = url_for('static', filename=f'uploads/{filename}', _external=True)
-                continue # Skip to the next link in the loop
-        
-        # If no file was uploaded, use the URL from the text input
-        # Fall back to the existing URL if the input is empty to prevent accidental deletion
+                continue
         link['url'] = request.form.get(f"url_{i}") or link['url']
-
     write_json(CONFIG_FILE, site_config)
+    cleanup_unused_files() # <-- Call cleanup after link update
     flash('Quick access links updated successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
 

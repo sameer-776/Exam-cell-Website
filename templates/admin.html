@@ -1,164 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel - Notifications</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/admin_style.css') }}"
+    />
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Admin Dashboard</h1>
-            <div>
-                <button class="btn" onclick="openAddModal()"><i class="fas fa-plus"></i> Add New Notification</button>
-                <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Logout</a>
-            </div>
+      <div class="header">
+        <h1>Admin Dashboard</h1>
+        <div>
+          <button class="btn" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> Add New Notification
+          </button>
+          <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary"
+            >Logout</a
+          >
         </div>
+      </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
-        {% endwith %}
-        
-        <div class="card">
-            <h2><i class="fas fa-bell"></i> Active Notifications</h2>
-            <div class="notification-list">
-                {% for notif in active_notifications %}
-                    <div class="notification-item">
-                        <div class="notif-details">
-                            <span class="badge {{ notif.type }}">{{ notif.type }}</span>
-                            {% if notif.end_datetime %} <span class="badge expiry">Ends: {{ notif.end_datetime.split('T')[0] }}</span> {% endif %}
-                            <h3>{{ notif.title }}</h3>
-                            <p><strong>Depts:</strong> {{ notif.department|join(', ') if notif.department else 'N/A' }} | <strong>Years:</strong> {{ notif.year|join(', ') if notif.year else 'N/A' }}</p>
-                        </div>
-                        <div class="notif-actions">
-                            <button class="btn btn-secondary" onclick='openEditModal({{ notif | tojson | safe }})'>Edit</button>
-                            <form action="{{ url_for('delete_notification', notification_id=notif.id) }}" method="POST" onsubmit="return confirm('Are you sure?');"><button type="submit" class="btn btn-danger">Delete</button></form>
-                        </div>
-                    </div>
-                {% else %}
-                    <p>No active notifications found.</p>
-                {% endfor %}
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}{% endif %} {% endwith %}
+
+      <div class="card">
+        <h2><i class="fas fa-bell"></i> Active Notifications</h2>
+        <div class="notification-list">
+          {% for notif in active_notifications %}
+          <div class="notification-item">
+            <div class="notif-details">
+              <span class="badge {{ notif.type }}">{{ notif.type }}</span>
+              {% if notif.end_datetime %}
+              <span class="badge expiry"
+                >Ends: {{ notif.end_datetime.split('T')[0] }}</span
+              >
+              {% endif %}
+              <h3>{{ notif.title }}</h3>
+              <p>
+                <strong>Depts:</strong> {{ notif.department|join(', ') if
+                notif.department else 'N/A' }} | <strong>Years:</strong> {{
+                notif.year|join(', ') if notif.year else 'N/A' }}
+              </p>
             </div>
-        </div>
-
-        <div class="card">
-            <h2><i class="fas fa-archive"></i> Archived Notifications</h2>
-            <div class="notification-list">
-                 {% for notif in archived_notifications %}
-                    <div class="notification-item archived-item">
-                        <div class="notif-details"><span class="badge {{ notif.type }}">{{ notif.type }}</span><h3>{{ notif.title }}</h3></div>
-                        <div class="notif-actions">
-                            <button class="btn btn-secondary" onclick='openEditModal({{ notif | tojson | safe }})'>Edit / Un-archive</button>
-                            <form action="{{ url_for('delete_notification', notification_id=notif.id) }}" method="POST" onsubmit="return confirm('Are you sure?');"><button type="submit" class="btn btn-danger">Delete</button></form>
-                        </div>
-                    </div>
-                {% else %}
-                    <p>No notifications in the archive.</p>
-                {% endfor %}
+            <div class="notif-actions">
+              <button
+                class="btn btn-secondary"
+                onclick="openEditModal({{ notif | tojson | safe }})"
+              >
+                Edit
+              </button>
+              <form
+                action="{{ url_for('delete_notification', notification_id=notif.id) }}"
+                method="POST"
+                onsubmit="return confirm('Are you sure?');"
+              >
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
             </div>
+          </div>
+          {% else %}
+          <p>No active notifications found.</p>
+          {% endfor %}
         </div>
+      </div>
 
-        <div class="card">
-            <h2><i class="fas fa-link"></i> Edit Quick Access Links</h2>
-            <form action="{{ url_for('update_config_links') }}" method="POST" enctype="multipart/form-data">
-                <div class="link-editor-grid">
-                {% for link in quick_links %}
-                    <div class="link-editor-item">
-                        <div class="link-icon"><i class="{{ link.icon_class }}"></i></div>
-                        <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" name="title_{{ loop.index0 }}" value="{{ link.title }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Link Target</label>
-                            <div class="radio-group">
-                                <input type="radio" id="link_type_url_{{ loop.index0 }}" name="link_type_{{ loop.index0 }}" value="url" checked onchange="toggleLinkInput('{{ loop.index0 }}', this.value)">
-                                <label for="link_type_url_{{ loop.index0 }}">URL</label>
-                                <input type="radio" id="link_type_file_{{ loop.index0 }}" name="link_type_file_{{ loop.index0 }}" value="file" onchange="toggleLinkInput('{{ loop.index0 }}', this.value)">
-                                <label for="link_type_file_{{ loop.index0 }}">Upload File</label>
-                            </div>
-                            <input type="text" id="url_{{ loop.index0 }}" name="url_{{ loop.index0 }}" value="{{ link.url }}" class="link-url-input">
-                            <input type="file" id="file_{{ loop.index0 }}" name="file_{{ loop.index0 }}" class="link-file-input" style="display: none;">
-                        </div>
-                    </div>
-                {% endfor %}
+      <div class="card">
+        <h2><i class="fas fa-archive"></i> Archived Notifications</h2>
+        <div class="notification-list">
+          {% for notif in archived_notifications %}
+          <div class="notification-item archived-item">
+            <div class="notif-details">
+              <span class="badge {{ notif.type }}">{{ notif.type }}</span>
+              <h3>{{ notif.title }}</h3>
+            </div>
+            <div class="notif-actions">
+              <button
+                class="btn btn-secondary"
+                onclick="openEditModal({{ notif | tojson | safe }})"
+              >
+                Edit / Un-archive
+              </button>
+              <form
+                action="{{ url_for('delete_notification', notification_id=notif.id) }}"
+                method="POST"
+                onsubmit="return confirm('Are you sure?');"
+              >
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <p>No notifications in the archive.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><i class="fas fa-link"></i> Edit Quick Access Links</h2>
+        <form
+          action="{{ url_for('update_config_links') }}"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <div class="link-editor-grid">
+            {% for link in quick_links %}
+            <div class="link-editor-item">
+              <div class="link-icon"><i class="{{ link.icon_class }}"></i></div>
+              <div class="form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  name="title_{{ loop.index0 }}"
+                  value="{{ link.title }}"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Link Target</label>
+                <div class="radio-group">
+                  <input
+                    type="radio"
+                    id="link_type_url_{{ loop.index0 }}"
+                    name="link_type_{{ loop.index0 }}"
+                    value="url"
+                    checked
+                    onchange="toggleLinkInput('{{ loop.index0 }}', this.value)"
+                  />
+                  <label for="link_type_url_{{ loop.index0 }}">URL</label>
+                  <input
+                    type="radio"
+                    id="link_type_file_{{ loop.index0 }}"
+                    name="link_type_{{ loop.index0 }}"
+                    value="file"
+                    onchange="toggleLinkInput('{{ loop.index0 }}', this.value)"
+                  />
+                  <label for="link_type_file_{{ loop.index0 }}"
+                    >Upload File</label
+                  >
                 </div>
-                <button type="submit" class="btn">Save Links</button>
-            </form>
-        </div>
+                <input
+                  type="text"
+                  id="url_{{ loop.index0 }}"
+                  name="url_{{ loop.index0 }}"
+                  value="{{ link.url }}"
+                  class="link-url-input"
+                />
+                <input
+                  type="file"
+                  id="file_{{ loop.index0 }}"
+                  name="file_{{ loop.index0 }}"
+                  class="link-file-input"
+                  style="display: none"
+                />
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn">Save Links</button>
+        </form>
+      </div>
     </div>
 
-    <div id="addModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeAddModal()">&times;</span><h2>Add New Notification</h2><form id="addForm" action="{{ url_for('add_notification') }}" method="POST" enctype="multipart/form-data"></form></div></div>
-    <div id="editModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeEditModal()">&times;</span><h2>Edit Notification</h2><form id="editForm" method="POST" enctype="multipart/form-data"></form></div></div>
-    
-    <script>
-        // --- vvv NEW SCRIPT FOR LINK EDITOR vvv ---
-        function toggleLinkInput(index, type) {
-            document.getElementById(`url_${index}`).style.display = (type === 'url') ? 'block' : 'none';
-            document.getElementById(`file_${index}`).style.display = (type === 'file') ? 'block' : 'none';
-        }
+    <div id="addModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeAddModal()">&times;</span>
+        <h2>Add New Notification</h2>
+        <form
+          id="addForm"
+          action="{{ url_for('add_notification') }}"
+          method="POST"
+          enctype="multipart/form-data"
+        ></form>
+      </div>
+    </div>
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Notification</h2>
+        <form id="editForm" method="POST" enctype="multipart/form-data"></form>
+      </div>
+    </div>
 
-        // --- The rest of the script is unchanged ---
-        const departmentOptions = { 'cs': 'CS', 'mech': 'Mechanical', 'elec': 'Electrical', 'civil': 'Civil', 'all': 'All Departments' };
-        const yearOptions = { '1': '1st', '2': '2nd', '3': '3rd', '4': '4th', 'all': 'All Years' };
-        const typeOptions = ['common', 'guideline', 'departmental', 'info', 'archive'];
-        const addModal = document.getElementById('addModal');
-        const editModal = document.getElementById('editModal');
-        function buildFormHTML(notif = {}) {
-            const prefix = notif.id ? 'edit' : 'add';
-            const isTimed = notif.end_datetime ? 'checked' : '';
-            const isPermanent = !notif.end_datetime ? 'checked' : '';
-            return `
+    <script>
+      // --- vvv JAVASCRIPT OPTIONS ARE UPDATED vvv ---
+      const departmentOptions = {
+        cse: "CS & Engineering",
+        eng: "Engineering & Tech",
+        arch: "Planning & Architecture",
+        design: "Design & Arts",
+        mgmt: "Management & Commerce",
+        hm: "Hotel Management",
+        sci: "Science & Humanities",
+        health: "Public Health",
+        ire: "Innovation & Research",
+        all: "All Departments",
+      };
+      const yearOptions = {
+        1: "1st",
+        2: "2nd",
+        3: "3rd",
+        4: "4th",
+        5: "5th",
+        all: "All Years",
+      };
+      const typeOptions = [
+        "common",
+        "guideline",
+        "departmental",
+        "info",
+        "archive",
+      ];
+
+      const addModal = document.getElementById("addModal");
+      const editModal = document.getElementById("editModal");
+
+      // --- The rest of the script is unchanged ---
+      function toggleLinkInput(index, type) {
+        document.getElementById(`url_${index}`).style.display =
+          type === "url" ? "block" : "none";
+        document.getElementById(`file_${index}`).style.display =
+          type === "file" ? "block" : "none";
+      }
+      function buildFormHTML(notif = {}) {
+        const prefix = notif.id ? "edit" : "add";
+        const isTimed = notif.end_datetime ? "checked" : "";
+        const isPermanent = !notif.end_datetime ? "checked" : "";
+        return `
                 <div class="form-grid-3">
                     <div class="form-group span-3"><label>Title</label><input type="text" name="title" required></div>
                     <div class="form-group span-3"><label>Body</label><textarea name="body" rows="3" required></textarea></div>
                     <div class="form-group span-3">
                         <label>Attachment</label>
-                        <div class="radio-group">
-                            <input type="radio" id="${prefix}_attach_url" name="attach_type" value="url" checked onchange="toggleAttachment('${prefix}', this.value)"><label for="${prefix}_attach_url">URL</label>
-                            <input type="radio" id="${prefix}_attach_file" name="attach_type" value="file" onchange="toggleAttachment('${prefix}', this.value)"><label for="${prefix}_attach_file">Upload New File</label>
-                        </div>
+                        <div class="radio-group"><input type="radio" id="${prefix}_attach_url" name="attach_type" value="url" checked onchange="toggleAttachment('${prefix}', this.value)"><label for="${prefix}_attach_url">URL</label><input type="radio" id="${prefix}_attach_file" name="attach_type" value="file" onchange="toggleAttachment('${prefix}', this.value)"><label for="${prefix}_attach_file">Upload New File</label></div>
                         <input type="text" id="${prefix}_attachment_url" name="attachment_url" placeholder="https://example.com/file.pdf">
-                        ${prefix === 'edit' ? `<input type="text" id="edit_attachment_url_display" readonly title="Current saved URL/File Path">` : ''}
+                        ${
+                          prefix === "edit"
+                            ? `<input type="text" id="edit_attachment_url_display" readonly title="Current saved URL/File Path">`
+                            : ""
+                        }
                         <input type="file" id="${prefix}_attachment_file" name="attachment_file" style="display: none;">
                     </div>
-                    <div class="form-group span-3 departmental-fields">${createCheckboxes('department', departmentOptions, prefix)}</div>
-                    <div class="form-group span-3 departmental-fields">${createCheckboxes('year', yearOptions, prefix)}</div>
-                    <div class="form-group"><label>Type</label><select name="type" required onchange="toggleDepartmentalFields(this)">${typeOptions.map(o => `<option value="${o}">${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('')}</select></div>
+                    <div class="form-group"><label>Type</label><select name="type" required onchange="toggleDepartmentalFields(this)">${typeOptions
+                      .map(
+                        (o) =>
+                          `<option value="${o}">${
+                            o.charAt(0).toUpperCase() + o.slice(1)
+                          }</option>`
+                      )
+                      .join("")}</select></div>
                     <div class="form-group span-2"></div>
+                    <div class="form-group span-3 departmental-fields">${createCheckboxes(
+                      "department",
+                      departmentOptions,
+                      prefix
+                    )}</div>
+                    <div class="form-group span-3 departmental-fields">${createCheckboxes(
+                      "year",
+                      yearOptions,
+                      prefix
+                    )}</div>
                     <div class="form-group span-3">
                         <label>Visibility Period</label>
                         <div class="radio-group"><input type="radio" id="${prefix}_expiry_permanent" name="expiry_type" value="permanent" ${isPermanent} onchange="toggleExpiry('${prefix}', this.value)"><label for="${prefix}_expiry_permanent">Permanent</label><input type="radio" id="${prefix}_expiry_timed" name="expiry_type" value="timed" ${isTimed} onchange="toggleExpiry('${prefix}', this.value)"><label for="${prefix}_expiry_timed">Timed</label></div>
-                        <div id="${prefix}-timed-inputs" style="display: ${notif.end_datetime ? 'grid' : 'none'};"><label>Start</label><input type="datetime-local" name="start_datetime"><label>End</label><input type="datetime-local" name="end_datetime"></div>
+                        <div id="${prefix}-timed-inputs" style="display: ${
+          notif.end_datetime ? "grid" : "none"
+        };"><label>Start</label><input type="datetime-local" name="start_datetime"><label>End</label><input type="datetime-local" name="end_datetime"></div>
                     </div>
                     <div class="form-group checkbox-group span-3"><input type="checkbox" name="is_popup" value="true"><label>Show as Urgent Popup?</label></div>
                 </div>
-                <button type="submit" class="btn">${notif.id ? 'Save Changes' : 'Add Notification'}</button>
+                <button type="submit" class="btn">${
+                  notif.id ? "Save Changes" : "Add Notification"
+                }</button>
             `;
+      }
+      function openAddModal() {
+        const form = document.getElementById("addForm");
+        form.innerHTML = buildFormHTML();
+        toggleDepartmentalFields(form.querySelector("[name=type]"));
+        addModal.style.display = "block";
+      }
+      function openEditModal(notif) {
+        const form = document.getElementById("editForm");
+        form.action = "/admin/edit/" + notif.id;
+        form.innerHTML = buildFormHTML(notif);
+        form.title.value = notif.title || "";
+        form.body.value = notif.body || "";
+        form.is_popup.checked = notif.is_popup || false;
+        form.type.value = notif.type || "common";
+        (notif.department || []).forEach((val) => {
+          const el = form.querySelector(
+            `input[name="department"][value="${val}"]`
+          );
+          if (el) el.checked = true;
+        });
+        (notif.year || []).forEach((val) => {
+          const el = form.querySelector(`input[name="year"][value="${val}"]`);
+          if (el) el.checked = true;
+        });
+        if (notif.end_datetime) {
+          form.start_datetime.value = toLocalISOString(notif.start_datetime);
+          form.end_datetime.value = toLocalISOString(notif.end_datetime);
         }
-        function openAddModal() { const form = document.getElementById('addForm'); form.innerHTML = buildFormHTML(); toggleDepartmentalFields(form.querySelector('[name=type]')); addModal.style.display = 'block'; }
-        function openEditModal(notif) {
-            const form = document.getElementById('editForm');
-            form.action = '/admin/edit/' + notif.id;
-            form.innerHTML = buildFormHTML(notif);
-            form.title.value = notif.title || ''; form.body.value = notif.body || ''; form.is_popup.checked = notif.is_popup || false; form.type.value = notif.type || 'common';
-            (notif.department || []).forEach(val => { const el = form.querySelector(`input[name="department"][value="${val}"]`); if(el) el.checked = true; });
-            (notif.year || []).forEach(val => { const el = form.querySelector(`input[name="year"][value="${val}"]`); if(el) el.checked = true; });
-            if (notif.end_datetime) { form.start_datetime.value = toLocalISOString(notif.start_datetime); form.end_datetime.value = toLocalISOString(notif.end_datetime); }
-            if(notif.attachment_url) { form.querySelector('#edit_attachment_url_display').value = notif.attachment_url; }
-            toggleDepartmentalFields(form.querySelector('[name=type]'));
-            editModal.style.display = 'block';
+        if (notif.attachment_url) {
+          form.querySelector("#edit_attachment_url_display").value =
+            notif.attachment_url;
         }
-        function createCheckboxes(name, options, prefix) { let html = `<label>${name.charAt(0).toUpperCase() + name.slice(1)}</label><div class="checkbox-grid">`; for (const [value, label] of Object.entries(options)) { html += `<div class="checkbox-group"><input type="checkbox" name="${name}" id="${prefix}_${name}_${value}" value="${value}"><label for="${prefix}_${name}_${value}">${label}</label></div>`; } return html + '</div>'; }
-        function toggleDepartmentalFields(selectElement) { const form = selectElement.closest('form'); const fields = form.querySelectorAll('.departmental-fields'); const display = selectElement.value === 'departmental' ? 'block' : 'none'; fields.forEach(field => field.style.display = display); }
-        const toLocalISOString = (iso) => iso ? new Date(iso.endsWith('Z') ? iso : iso + 'Z').toISOString().slice(0, 16) : '';
-        function closeAddModal() { addModal.style.display = 'none'; }
-        function closeEditModal() { editModal.style.display = 'none'; }
-        function toggleAttachment(prefix, value) { document.getElementById(`${prefix}_attachment_url`).style.display = value === 'url' ? 'block' : 'none'; document.getElementById(`${prefix}_attachment_file`).style.display = value === 'file' ? 'block' : 'none'; }
-        function toggleExpiry(prefix, value) { document.getElementById(`${prefix}-timed-inputs`).style.display = value === 'timed' ? 'grid' : 'none'; }
-        window.onclick = (event) => { if (event.target == addModal) closeAddModal(); if (event.target == editModal) closeEditModal(); };
+        toggleDepartmentalFields(form.querySelector("[name=type]"));
+        editModal.style.display = "block";
+      }
+      function createCheckboxes(name, options, prefix) {
+        let html = `<label>${
+          name.charAt(0).toUpperCase() + name.slice(1)
+        }</label><div class="checkbox-grid">`;
+        for (const [value, label] of Object.entries(options)) {
+          html += `<div class="checkbox-group"><input type="checkbox" name="${name}" id="${prefix}_${name}_${value}" value="${value}"><label for="${prefix}_${name}_${value}">${label}</label></div>`;
+        }
+        return html + "</div>";
+      }
+      function toggleDepartmentalFields(selectElement) {
+        const form = selectElement.closest("form");
+        const fields = form.querySelectorAll(".departmental-fields");
+        const display =
+          selectElement.value === "departmental" ? "block" : "none";
+        fields.forEach((field) => (field.style.display = display));
+      }
+      const toLocalISOString = (iso) =>
+        iso
+          ? new Date(iso.endsWith("Z") ? iso : iso + "Z")
+              .toISOString()
+              .slice(0, 16)
+          : "";
+      function closeAddModal() {
+        addModal.style.display = "none";
+      }
+      function closeEditModal() {
+        editModal.style.display = "none";
+      }
+      function toggleAttachment(prefix, value) {
+        document.getElementById(`${prefix}_attachment_url`).style.display =
+          value === "url" ? "block" : "none";
+        document.getElementById(`${prefix}_attachment_file`).style.display =
+          value === "file" ? "block" : "none";
+      }
+      function toggleExpiry(prefix, value) {
+        document.getElementById(`${prefix}-timed-inputs`).style.display =
+          value === "timed" ? "grid" : "none";
+      }
+      window.onclick = (event) => {
+        if (event.target == addModal) closeAddModal();
+        if (event.target == editModal) closeEditModal();
+      };
     </script>
-</body>
+  </body>
 </html>
